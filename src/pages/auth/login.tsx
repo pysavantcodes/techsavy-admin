@@ -56,7 +56,7 @@ export function Login() {
         <CardHeader className="space-y-1 items-center justify-center text-center">
           <div className="flex flex-col items-center justify-center mb-2">
             <img src={"/logo.png"} alt="logo" className="w-[170px] " />
-            <p className="text-xl">Admin</p>
+            <p className="text-xl text-atlantis-800 font-semibold">Admin</p>
           </div>
 
           <CardDescription>

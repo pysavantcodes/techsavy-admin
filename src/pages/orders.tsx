@@ -18,6 +18,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Package,
+  ArrowDownUpIcon,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -25,6 +26,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "@/context/auth-context";
@@ -66,6 +77,9 @@ export function Orders() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<string>("");
+  const [pendingOrderId, setPendingOrderId] = useState<number | null>(null);
   const { token } = useAuth();
   const navigate = useNavigate();
 
@@ -129,6 +143,27 @@ export function Orders() {
     }
   };
 
+  const handleStatusUpdateClick = (orderId: number, newStatus: string) => {
+    setPendingOrderId(orderId);
+    setPendingStatus(newStatus);
+    setShowStatusDialog(true);
+  };
+
+  const handleStatusUpdateConfirm = () => {
+    if (pendingOrderId && pendingStatus) {
+      handleStatusUpdate(pendingOrderId, pendingStatus);
+    }
+    setShowStatusDialog(false);
+    setPendingOrderId(null);
+    setPendingStatus("");
+  };
+
+  const handleStatusUpdateCancel = () => {
+    setShowStatusDialog(false);
+    setPendingOrderId(null);
+    setPendingStatus("");
+  };
+
   const getStatusVariant = (status: string) => {
     switch (status.toLowerCase()) {
       case "delivered":
@@ -160,7 +195,9 @@ export function Orders() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-12">↕</TableHead>
+                <TableHead className="w-12">
+                  <ArrowDownUpIcon className="size-4" />
+                </TableHead>
                 <TableHead>Order</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Total</TableHead>
@@ -199,144 +236,180 @@ export function Orders() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center max-lg:flex-col max-lg:gap-4 max-lg:items-start">
-        <h1 className="text-2xl font-bold text-atlantis-800">Orders</h1>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 size-4" />
-          <Input
-            placeholder="Search orders"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 w-64"
-          />
+    <>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center max-lg:flex-col max-lg:gap-4 max-lg:items-start">
+          <h1 className="text-2xl font-bold text-atlantis-800">Orders</h1>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 size-4" />
+            <Input
+              placeholder="Search orders"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 w-64"
+            />
+          </div>
+        </div>
+
+        <div className="border rounded-lg">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12">
+                  <ArrowDownUpIcon className="size-4" />
+                </TableHead>
+                <TableHead>Order</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredOrders.length > 0 ? (
+                filteredOrders.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell>
+                      {order.items[0]?.product?.images[0] ? (
+                        <img
+                          src={order.items[0].product.images[0]}
+                          alt={order.items[0].product.title}
+                          className="w-8 h-8 object-cover rounded"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
+                          <Package className="h-4 w-4 text-gray-400" />
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {order.order_number}
+                    </TableCell>
+                    <TableCell>{formatDate(order.created_at)}</TableCell>
+                    <TableCell>{formatCurrency(order.total_amount)}</TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusVariant(order.status)}>
+                        {order.status.charAt(0).toUpperCase() +
+                          order.status.slice(1)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() =>
+                              navigate(`/dashboard/orders/${order.id}`)
+                            }
+                          >
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleStatusUpdateClick(order.id, "processing")
+                            }
+                            disabled={
+                              order.status === "processing" ||
+                              order.status === "shipped" ||
+                              order.status === "delivered"
+                            }
+                          >
+                            Mark as Processing
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleStatusUpdateClick(order.id, "shipped")
+                            }
+                            disabled={
+                              order.status === "shipped" ||
+                              order.status === "delivered"
+                            }
+                          >
+                            Mark as Shipped
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleStatusUpdateClick(order.id, "delivered")
+                            }
+                            disabled={order.status === "delivered"}
+                          >
+                            Mark as Delivered
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center">
+                    No orders found
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Pagination */}
+        <div className="flex justify-center items-center space-x-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <Button
+              key={page}
+              variant={currentPage === page ? "default" : "outline"}
+              size="sm"
+              onClick={() => handlePageChange(page)}
+            >
+              {page}
+            </Button>
+          ))}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            <ArrowRight className="h-4 w-4" />
+          </Button>
         </div>
       </div>
 
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12">↕</TableHead>
-              <TableHead>Order</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Total</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredOrders.length > 0 ? (
-              filteredOrders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell>
-                    {order.items[0]?.product?.images[0] ? (
-                      <img
-                        src={order.items[0].product.images[0]}
-                        alt={order.items[0].product.title}
-                        className="w-8 h-8 object-cover rounded"
-                      />
-                    ) : (
-                      <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
-                        <Package className="h-4 w-4 text-gray-400" />
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {order.order_number}
-                  </TableCell>
-                  <TableCell>{formatDate(order.created_at)}</TableCell>
-                  <TableCell>{formatCurrency(order.total_amount)}</TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusVariant(order.status)}>
-                      {order.status.charAt(0).toUpperCase() +
-                        order.status.slice(1)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() =>
-                            navigate(`/dashboard/orders/${order.id}`)
-                          }
-                        >
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() =>
-                            handleStatusUpdate(order.id, "processing")
-                          }
-                          disabled={order.status === "processing"}
-                        >
-                          Mark as Processing
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() =>
-                            handleStatusUpdate(order.id, "shipped")
-                          }
-                          disabled={order.status === "shipped"}
-                        >
-                          Mark as Shipped
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() =>
-                            handleStatusUpdate(order.id, "delivered")
-                          }
-                          disabled={order.status === "delivered"}
-                        >
-                          Mark as Delivered
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center">
-                  No orders found
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Pagination */}
-      <div className="flex justify-center items-center space-x-2">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => handlePageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-          <Button
-            key={page}
-            variant={currentPage === page ? "default" : "outline"}
-            size="sm"
-            onClick={() => handlePageChange(page)}
-          >
-            {page}
-          </Button>
-        ))}
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => handlePageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-        >
-          <ArrowRight className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
+      {/* Status Update Confirmation Dialog */}
+      <AlertDialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Status Update</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to update the order status to{" "}
+              <span className="font-semibold capitalize">{pendingStatus}</span>?
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleStatusUpdateCancel}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleStatusUpdateConfirm}
+              className="bg-atlantis-600 hover:bg-atlantis-700 focus:ring-atlantis-600 text-white"
+            >
+              Update Status
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

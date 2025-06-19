@@ -4,10 +4,9 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { X, Upload, ArrowLeft } from "lucide-react";
+import { X, Upload, ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/auth-context";
 import axios from "axios";
@@ -20,6 +19,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { Switch } from "@/components/ui/switch";
+import { RichTextEditor } from "@/components/rich-text-editor";
 
 interface Category {
   id: number;
@@ -30,6 +31,17 @@ interface Category {
   updated_at: string;
 }
 
+interface AddonOption {
+  option: string;
+  price: string;
+}
+
+interface Addon {
+  name: string;
+  is_required: "1" | "0";
+  options: AddonOption[];
+}
+
 export function AddProduct() {
   const navigate = useNavigate();
   const { token } = useAuth();
@@ -37,6 +49,7 @@ export function AddProduct() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [selectedCondition, setSelectedCondition] = useState("new");
+  const [addons, setAddons] = useState<Addon[]>([]);
   const [formData, setFormData] = useState({
     title: "",
     price: "",
@@ -113,8 +126,119 @@ export function AddProduct() {
     fileInputRef.current?.click();
   };
 
+  // Addon management functions
+  const addAddon = () => {
+    setAddons((prev) => [
+      ...prev,
+      {
+        name: "",
+        is_required: "0",
+        options: [{ option: "", price: "" }],
+      },
+    ]);
+  };
+
+  const removeAddon = (addonIndex: number) => {
+    setAddons((prev) => prev.filter((_, index) => index !== addonIndex));
+  };
+
+  const updateAddon = (addonIndex: number, field: keyof Addon, value: any) => {
+    setAddons((prev) =>
+      prev.map((addon, index) =>
+        index === addonIndex ? { ...addon, [field]: value } : addon
+      )
+    );
+  };
+
+  const addOption = (addonIndex: number) => {
+    setAddons((prev) =>
+      prev.map((addon, index) =>
+        index === addonIndex
+          ? { ...addon, options: [...addon.options, { option: "", price: "" }] }
+          : addon
+      )
+    );
+  };
+
+  const removeOption = (addonIndex: number, optionIndex: number) => {
+    setAddons((prev) =>
+      prev.map((addon, index) =>
+        index === addonIndex
+          ? {
+              ...addon,
+              options: addon.options.filter(
+                (_, optIndex) => optIndex !== optionIndex
+              ),
+            }
+          : addon
+      )
+    );
+  };
+
+  const updateOption = (
+    addonIndex: number,
+    optionIndex: number,
+    field: keyof AddonOption,
+    value: string
+  ) => {
+    setAddons((prev) =>
+      prev.map((addon, index) =>
+        index === addonIndex
+          ? {
+              ...addon,
+              options: addon.options.map((option, optIndex) =>
+                optIndex === optionIndex
+                  ? { ...option, [field]: value }
+                  : option
+              ),
+            }
+          : addon
+      )
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate addons if any exist
+    if (addons.length > 0) {
+      for (let i = 0; i < addons.length; i++) {
+        const addon = addons[i];
+
+        // Check if addon name is filled
+        if (!addon.name.trim()) {
+          toast.error(`Please fill in the name for Addon ${i + 1}`);
+          return;
+        }
+
+        // Check if all options are filled
+        for (let j = 0; j < addon.options.length; j++) {
+          const option = addon.options[j];
+          if (!option.option.trim()) {
+            toast.error(
+              `Please fill in the option name for Addon ${i + 1}, Option ${
+                j + 1
+              }`
+            );
+            return;
+          }
+          if (!option.price.trim()) {
+            toast.error(
+              `Please fill in the price for Addon ${i + 1}, Option ${j + 1}`
+            );
+            return;
+          }
+          // Validate price is a valid number
+          if (isNaN(Number(option.price)) || Number(option.price) < 0) {
+            toast.error(
+              `Please enter a valid price for Addon ${i + 1}, Option ${j + 1}`
+            );
+            return;
+          }
+        }
+      }
+    }
+
     setLoading(true);
 
     const toastId = toast.loading("Creating product...");
@@ -131,6 +255,26 @@ export function AddProduct() {
 
       selectedImages.forEach((image, index) => {
         formDataToSend.append(`images[${index}]`, image);
+      });
+
+      // Add addons data
+      addons.forEach((addon, addonIndex) => {
+        formDataToSend.append(`addons[${addonIndex}][name]`, addon.name);
+        formDataToSend.append(
+          `addons[${addonIndex}][is_required]`,
+          addon.is_required
+        );
+
+        addon.options.forEach((option, optionIndex) => {
+          formDataToSend.append(
+            `addons[${addonIndex}][options][${optionIndex}][option]`,
+            option.option
+          );
+          formDataToSend.append(
+            `addons[${addonIndex}][options][${optionIndex}][price]`,
+            option.price
+          );
+        });
       });
 
       const response = await axios.post(
@@ -160,15 +304,21 @@ export function AddProduct() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => navigate("/dashboard/products")}
-        >
-          <ArrowLeft />
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => navigate("/dashboard/products")}
+          >
+            <ArrowLeft />
+          </Button>
+          <h1 className="text-2xl font-bold text-atlantis-800">Add Product</h1>
+        </div>
+
+        <Button type="submit" className="bg-primary" disabled={loading}>
+          {loading ? "Creating Product..." : "Save Product"}
         </Button>
-        <h1 className="text-2xl font-bold text-atlantis-800">Add Product</h1>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -237,14 +387,11 @@ export function AddProduct() {
 
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              name="description"
-              placeholder="Product description"
-              className="min-h-32"
+            <RichTextEditor
               value={formData.description}
-              onChange={handleInputChange}
-              required
+              onChange={(value) =>
+                setFormData((prev) => ({ ...prev, description: value }))
+              }
               disabled={loading}
             />
           </div>
@@ -351,9 +498,180 @@ export function AddProduct() {
         </div>
       </div>
 
-      <Button type="submit" className="bg-primary" disabled={loading}>
-        {loading ? "Creating Product..." : "Save Product"}
-      </Button>
+      {/* Addons Section */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Product Addons
+          </h2>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={addAddon}
+            disabled={loading}
+            className="gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Add Addon
+          </Button>
+        </div>
+
+        {addons.length === 0 && (
+          <Card>
+            <CardContent className="p-6 text-center text-gray-500">
+              <p className="text-sm">
+                No addons added yet. Click "Add Addon" to get started.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        <div className="grid max-lg:grid-cols-1 grid-cols-3 max-xl:grid-cols-2 gap-4">
+          {addons.map((addon, addonIndex) => (
+            <Card key={addonIndex} className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">
+                    Addon {addonIndex + 1}
+                  </h3>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeAddon(addonIndex)}
+                    disabled={loading}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor={`addon-name-${addonIndex}`}>
+                      Addon Name <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id={`addon-name-${addonIndex}`}
+                      placeholder="e.g., Color, Size, Material, etc.  "
+                      value={addon.name}
+                      onChange={(e) =>
+                        updateAddon(addonIndex, "name", e.target.value)
+                      }
+                      disabled={loading}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id={`addon-required-${addonIndex}`}
+                        checked={addon.is_required === "1"}
+                        onCheckedChange={(checked: boolean) =>
+                          updateAddon(
+                            addonIndex,
+                            "is_required",
+                            checked ? "1" : "0"
+                          )
+                        }
+                        disabled={loading}
+                      />
+                      <Label htmlFor={`addon-required-${addonIndex}`}>
+                        Required
+                      </Label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label>
+                      Options <span className="text-red-500">*</span>
+                    </Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addOption(addonIndex)}
+                      disabled={loading}
+                      className="gap-2"
+                    >
+                      <Plus className="h-3 w-3" />
+                      Add Option
+                    </Button>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    Each addon must have at least one option with a name and
+                    price.
+                  </p>
+
+                  {addon.options.map((option, optionIndex) => (
+                    <div
+                      key={optionIndex}
+                      className="flex items-center gap-4 p-4 border rounded-lg"
+                    >
+                      <div className="flex-1 space-y-2">
+                        <Label htmlFor={`option-${addonIndex}-${optionIndex}`}>
+                          Option Name <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id={`option-${addonIndex}-${optionIndex}`}
+                          placeholder="e.g., Red, Large, Plastic"
+                          value={option.option}
+                          onChange={(e) =>
+                            updateOption(
+                              addonIndex,
+                              optionIndex,
+                              "option",
+                              e.target.value
+                            )
+                          }
+                          disabled={loading}
+                          required
+                        />
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <Label htmlFor={`price-${addonIndex}-${optionIndex}`}>
+                          Price <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id={`price-${addonIndex}-${optionIndex}`}
+                          placeholder="0.00"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={option.price}
+                          onChange={(e) =>
+                            updateOption(
+                              addonIndex,
+                              optionIndex,
+                              "price",
+                              e.target.value
+                            )
+                          }
+                          disabled={loading}
+                          required
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeOption(addonIndex, optionIndex)}
+                        disabled={loading || addon.options.length === 1}
+                        className="text-red-600 hover:text-red-700 mt-6"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
     </form>
   );
 }

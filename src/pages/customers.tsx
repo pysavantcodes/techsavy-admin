@@ -17,6 +17,7 @@ import {
   ArrowLeft,
   ArrowRight,
   User,
+  ArrowDownUpIcon,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -30,11 +31,23 @@ import { useAuth } from "@/context/auth-context";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 
+interface ShippingAddress {
+  id: number;
+  city: string;
+  state: string;
+  address: string;
+  country: string;
+  user_id: string;
+  zip_code: string;
+  created_at: string;
+  updated_at: string;
+}
+
 interface Customer {
   id: number;
   name: string;
   email: string;
-  shipping_address: string;
+  shipping_address: ShippingAddress;
 }
 
 export function Customers() {
@@ -78,6 +91,18 @@ export function Customers() {
     setCurrentPage(page);
   };
 
+  const formatAddress = (shippingAddress: ShippingAddress) => {
+    const parts = [
+      shippingAddress.address,
+      shippingAddress.city,
+      shippingAddress.state,
+      shippingAddress.zip_code,
+      shippingAddress.country,
+    ].filter(Boolean);
+
+    return parts.join(", ");
+  };
+
   const filteredCustomers = customers.filter(
     (customer) =>
       customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -96,7 +121,9 @@ export function Customers() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-12">↕</TableHead>
+                <TableHead className="w-12">
+                  <ArrowDownUpIcon className="size-4" />
+                </TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Shipping Address</TableHead>
@@ -149,7 +176,9 @@ export function Customers() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12">↕</TableHead>
+              <TableHead className="w-12">
+                <ArrowDownUpIcon className="size-4" />
+              </TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Shipping Address</TableHead>
@@ -168,7 +197,7 @@ export function Customers() {
                   <TableCell className="font-medium">{customer.name}</TableCell>
                   <TableCell>{customer.email}</TableCell>
                   <TableCell className="max-w-[300px] truncate">
-                    {customer.shipping_address}
+                    {formatAddress(customer.shipping_address)}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>

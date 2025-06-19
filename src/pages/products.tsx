@@ -12,7 +12,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Search, MoreHorizontal, ArrowRight, ArrowLeft } from "lucide-react";
+import {
+  Search,
+  MoreHorizontal,
+  ArrowRight,
+  ArrowLeft,
+  ArrowDownUpIcon,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -98,7 +104,9 @@ export function Products() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-12">↕</TableHead>
+                <TableHead className="w-12">
+                  <ArrowDownUpIcon className="size-4" />
+                </TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>SKU</TableHead>
                 <TableHead>Price</TableHead>
@@ -165,7 +173,9 @@ export function Products() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12">↕</TableHead>
+              <TableHead className="w-12">
+                <ArrowDownUpIcon className="size-4" />
+              </TableHead>
               <TableHead>Name</TableHead>
               <TableHead>SKU</TableHead>
               <TableHead>Price</TableHead>
@@ -185,7 +195,10 @@ export function Products() {
                       className="w-8 h-8 object-cover rounded"
                     />
                   </TableCell>
-                  <TableCell className="font-medium">{product.title}</TableCell>
+                  <TableCell className="font-medium">
+                    {product.title.slice(0, 25) +
+                      (product.title.length > 25 ? "..." : "")}
+                  </TableCell>
                   <TableCell>{product.sku}</TableCell>
                   <TableCell>
                     ₦{Number(product.price).toLocaleString()}

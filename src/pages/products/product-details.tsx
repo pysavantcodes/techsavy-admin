@@ -14,6 +14,7 @@ import {
   Tag,
   AlertCircle,
   ImageOff,
+  CheckCircle,
 } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "@/context/auth-context";
@@ -23,6 +24,17 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 interface ProductCategory {
   id: number;
   name: string;
+}
+
+interface AddonOption {
+  option: string;
+  price: string;
+}
+
+interface Addon {
+  name: string;
+  is_required: "1" | "0";
+  options: AddonOption[];
 }
 
 interface Product {
@@ -37,6 +49,7 @@ interface Product {
   category: ProductCategory;
   created_at: string;
   updated_at: string;
+  addons?: Addon[];
 }
 
 interface ApiResponse {
@@ -142,6 +155,7 @@ export function ProductDetails() {
   const hasImages = product.images && product.images.length > 0;
   const currentImage = hasImages ? product.images[selectedImageIndex] : null;
   const isInStock = product.quantity > 0;
+  const hasAddons = product.addons && product.addons.length > 0;
 
   return (
     <div className="container mx-auto space-y-6">
@@ -193,7 +207,7 @@ export function ProductDetails() {
         <Card className="!f-fit">
           <CardContent className="p-6">
             <div className="space-y-4">
-              <div className="aspect-square relative rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+              <div className="aspect-video relative rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
                 {currentImage && !imageLoadErrors.has(selectedImageIndex) ? (
                   <img
                     src={currentImage || "/placeholder.svg"}
@@ -291,9 +305,12 @@ export function ProductDetails() {
               <CardTitle>Description</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground leading-relaxed">
-                {product.description || "No description available."}
-              </p>
+              <div
+                className="leading-relaxed prose prose-sm max-w-none text-sm"
+                dangerouslySetInnerHTML={{
+                  __html: product.description || "No description available.",
+                }}
+              />
             </CardContent>
           </Card>
 
@@ -329,6 +346,53 @@ export function ProductDetails() {
           </Card>
         </div>
       </div>
+
+      {/* Addons Section */}
+      {hasAddons && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Product Addons
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6 grid max-lg:grid-cols-1 grid-cols-3 max-xl:grid-cols-2 gap-4">
+              {product.addons!.map((addon, addonIndex) => (
+                <div key={addonIndex} className="border rounded-lg p-4 !mt-0">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-medium">{addon.name}</h3>
+                      {addon.is_required === "1" && (
+                        <Badge variant="secondary" className="text-xs">
+                          Required
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {addon.options.map((option, optionIndex) => (
+                      <div
+                        key={optionIndex}
+                        className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border"
+                      >
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <span className="font-medium">{option.option}</span>
+                        </div>
+                        <span className="font-semibold text-green-600">
+                          +{formatCurrency(option.price)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
@@ -348,7 +412,7 @@ function ProductDetailsSkeleton() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardContent className="p-6">
-            <Skeleton className="aspect-square w-full rounded-lg" />
+            <Skeleton className="aspect-video w-full rounded-lg" />
             <div className="grid grid-cols-4 gap-2 mt-4">
               {Array.from({ length: 4 }).map((_, i) => (
                 <Skeleton key={i} className="aspect-square rounded-lg" />

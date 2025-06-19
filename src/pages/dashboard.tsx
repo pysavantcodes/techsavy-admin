@@ -139,9 +139,6 @@ export function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="text-2xl font-bold">
-                ₦{data?.total_sales_this_month || 0} — Total Sales
-              </div>
               <div className="space-y-3">
                 {data?.best_selling_products.map((item, index) => (
                   <div

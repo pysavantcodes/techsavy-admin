@@ -16,14 +16,13 @@ import { Eye, EyeOff } from "lucide-react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/auth-context";
 import { toast } from "sonner";
-import Cookies from "js-cookie";
 
 export function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, token } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,7 +45,7 @@ export function Login() {
     }
   };
 
-  if (Cookies.get("techSavyAdminAuthToken")) {
+  if (token) {
     return <Navigate to={"/dashboard"} />;
   }
 

@@ -506,6 +506,7 @@ export function OrderDetails() {
                   className="w-full justify-start"
                   onClick={() => handleStatusUpdateClick("processing")}
                   disabled={
+                    order.status === "pending" ||
                     order.status === "processing" ||
                     order.status === "shipped" ||
                     order.status === "delivered"
@@ -523,7 +524,9 @@ export function OrderDetails() {
                   className="w-full justify-start"
                   onClick={() => handleStatusUpdateClick("shipped")}
                   disabled={
-                    order.status === "shipped" || order.status === "delivered"
+                    order.status === "pending" ||
+                    order.status === "shipped" ||
+                    order.status === "delivered"
                   }
                 >
                   <Truck className="h-4 w-4 mr-2" />
@@ -537,7 +540,9 @@ export function OrderDetails() {
                   size="sm"
                   className="w-full justify-start"
                   onClick={() => handleStatusUpdateClick("delivered")}
-                  disabled={order.status === "delivered"}
+                  disabled={
+                    order.status === "pending" || order.status === "delivered"
+                  }
                 >
                   <CheckCircle className="h-4 w-4 mr-2" />
                   Mark as Delivered

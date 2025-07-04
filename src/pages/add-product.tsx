@@ -57,6 +57,10 @@ export function AddProduct() {
     sku: "",
     quantity: "",
     description: "",
+    is_deal: "0",
+    discount_type: "cash",
+    discount_amount: "",
+    deal_expires_at: "",
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -81,8 +85,10 @@ export function AddProduct() {
   };
 
   useEffect(() => {
-    fetchCategories();
-  }, []);
+    if (token) {
+      fetchCategories();
+    }
+  }, [token]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -200,6 +206,34 @@ export function AddProduct() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validate deal fields if it's a deal
+    if (formData.is_deal === "1") {
+      if (!formData.discount_amount.trim()) {
+        toast.error("Please enter a discount amount for the deal");
+        return;
+      }
+      if (!formData.deal_expires_at.trim()) {
+        toast.error("Please select an expiration date for the deal");
+        return;
+      }
+      // Validate discount amount is a valid number
+      if (
+        isNaN(Number(formData.discount_amount)) ||
+        Number(formData.discount_amount) < 0
+      ) {
+        toast.error("Please enter a valid discount amount");
+        return;
+      }
+      // Validate percentage discount doesn't exceed 100%
+      if (
+        formData.discount_type === "percentage" &&
+        Number(formData.discount_amount) > 100
+      ) {
+        toast.error("Percentage discount cannot exceed 100%");
+        return;
+      }
+    }
+
     // Validate addons if any exist
     if (addons.length > 0) {
       for (let i = 0; i < addons.length; i++) {
@@ -252,6 +286,10 @@ export function AddProduct() {
       formDataToSend.append("quantity", formData.quantity);
       formDataToSend.append("condition", selectedCondition);
       formDataToSend.append("description", formData.description);
+      formDataToSend.append("is_deal", formData.is_deal);
+      formDataToSend.append("discount_type", formData.discount_type);
+      formDataToSend.append("discount_amount", formData.discount_amount);
+      formDataToSend.append("deal_expires_at", formData.deal_expires_at);
 
       selectedImages.forEach((image, index) => {
         formDataToSend.append(`images[${index}]`, image);
@@ -494,6 +532,96 @@ export function AddProduct() {
                 </Badge>
               ))}
             </div>
+          </div>
+
+          {/* Deal Section */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="is-deal"
+                checked={formData.is_deal === "1"}
+                onCheckedChange={(checked: boolean) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    is_deal: checked ? "1" : "0",
+                  }))
+                }
+                disabled={loading}
+              />
+              <Label htmlFor="is-deal" className="text-base font-medium">
+                This is a deal
+              </Label>
+            </div>
+
+            {formData.is_deal === "1" && (
+              <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
+                <div className="space-y-2">
+                  <Label htmlFor="discount_type">
+                    Discount Type <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={formData.discount_type}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({ ...prev, discount_type: value }))
+                    }
+                    disabled={loading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select discount type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percentage">Percentage</SelectItem>
+                      <SelectItem value="cash">Cash</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="discount_amount">
+                    Discount Amount
+                    {formData.discount_type === "percentage"
+                      ? " (%)"
+                      : " (₦)"}{" "}
+                    <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="discount_amount"
+                    name="discount_amount"
+                    placeholder={
+                      formData.discount_type === "percentage" ? "10" : "1000"
+                    }
+                    type="number"
+                    min="0"
+                    max={
+                      formData.discount_type === "percentage"
+                        ? "100"
+                        : undefined
+                    }
+                    step={
+                      formData.discount_type === "percentage" ? "1" : "0.01"
+                    }
+                    value={formData.discount_amount}
+                    onChange={handleInputChange}
+                    disabled={loading}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="deal_expires_at">
+                    Deal Expires At <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="deal_expires_at"
+                    name="deal_expires_at"
+                    type="date"
+                    value={formData.deal_expires_at}
+                    onChange={handleInputChange}
+                    disabled={loading}
+                    min={new Date().toISOString().split("T")[0]}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

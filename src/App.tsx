@@ -14,12 +14,15 @@ import { Reviews } from "./pages/reviews";
 import { Login } from "./pages/auth/login";
 import { Register } from "./pages/auth/register";
 import { Layout } from "./components/layout";
-import { Deals } from "./pages/deals";
+import { Ads } from "./pages/ads";
+import { Settings } from "./pages/settings";
 import { AuthProvider } from "./context/auth-context";
 import { Toaster } from "sonner";
 import { ProductDetails } from "./pages/products/product-details";
 import { OrderDetails } from "./pages/orders/order-details";
 import { EditProduct } from "./pages/products/edit-product";
+import { NewsletterSubscribers } from "./pages/newsletter-subscribers";
+import { Categories } from "./pages/categories";
 
 function App() {
   return (
@@ -39,7 +42,13 @@ function App() {
             <Route path="orders/:id" element={<OrderDetails />} />
             <Route path="customers" element={<Customers />} />
             <Route path="reviews" element={<Reviews />} />
-            <Route path="deals" element={<Deals />} />
+            <Route
+              path="newsletter-subscribers"
+              element={<NewsletterSubscribers />}
+            />
+            <Route path="categories" element={<Categories />} />
+            <Route path="ads" element={<Ads />} />
+            <Route path="settings" element={<Settings />} />
           </Route>
           <Route path="*" element={<Navigate to="/login" />} />
         </Routes>

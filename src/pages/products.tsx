@@ -12,24 +12,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import {
-  Search,
-  MoreHorizontal,
-  ArrowRight,
-  ArrowLeft,
-  ArrowDownUpIcon,
-} from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Search, ArrowRight, ArrowLeft, ArrowDownUpIcon } from "lucide-react";
+
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "@/context/auth-context";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CategoryDialog } from "@/components/category-dialog";
 
 interface Product {
   id: number;
@@ -112,7 +100,6 @@ export function Products() {
                 <TableHead>Price</TableHead>
                 <TableHead>Stock</TableHead>
                 <TableHead>Categories</TableHead>
-                <TableHead>Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -136,9 +123,6 @@ export function Products() {
                   <TableCell>
                     <Skeleton className="h-4 w-[100px]" />
                   </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-8 w-8" />
-                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -153,7 +137,6 @@ export function Products() {
       <div className="flex justify-between items-center max-lg:flex-col max-lg:gap-4 max-lg:items-start">
         <h1 className="text-2xl font-bold text-atlantis-800">Products</h1>
         <div className="flex gap-2 flex-wrap">
-          <CategoryDialog />
           <Button asChild className="bg-primary">
             <Link to="/dashboard/products/add">Add product</Link>
           </Button>
@@ -181,13 +164,16 @@ export function Products() {
               <TableHead>Price</TableHead>
               <TableHead>Stock</TableHead>
               <TableHead>Categories</TableHead>
-              <TableHead>Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredProducts.length > 0 ? (
               filteredProducts.map((product) => (
-                <TableRow key={product.id}>
+                <TableRow
+                  onClick={() => navigate(`/dashboard/products/${product.id}`)}
+                  key={product.id}
+                  className="cursor-pointer"
+                >
                   <TableCell>
                     <img
                       src={product.images[0]}
@@ -213,34 +199,6 @@ export function Products() {
                     </Badge>
                   </TableCell>
                   <TableCell>{product.category.name}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() =>
-                            navigate(`/dashboard/products/${product.id}`)
-                          }
-                        >
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() =>
-                            navigate(`/dashboard/products/edit/${product.id}`)
-                          }
-                        >
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
                 </TableRow>
               ))
             ) : (

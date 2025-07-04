@@ -4,8 +4,10 @@ import {
   ShoppingCart,
   Users,
   Star,
-  Tag,
   Settings,
+  Megaphone,
+  Mail,
+  FolderOpen,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -34,6 +36,11 @@ const menuItems = [
     icon: Package,
   },
   {
+    title: "Categories",
+    url: "/dashboard/categories",
+    icon: FolderOpen,
+  },
+  {
     title: "Orders",
     url: "/dashboard/orders",
     icon: ShoppingCart,
@@ -44,14 +51,19 @@ const menuItems = [
     icon: Users,
   },
   {
+    title: "Newsletter Subscribers",
+    url: "/dashboard/newsletter-subscribers",
+    icon: Mail,
+  },
+  {
     title: "Reviews",
     url: "/dashboard/reviews",
     icon: Star,
   },
   {
-    title: "Deals",
-    url: "/dashboard/deals",
-    icon: Tag,
+    title: "Ads",
+    url: "/dashboard/ads",
+    icon: Megaphone,
   },
   {
     title: "Settings",

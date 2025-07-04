@@ -50,6 +50,10 @@ interface Product {
   created_at: string;
   updated_at: string;
   addons?: Addon[];
+  is_deal?: boolean;
+  discount_type?: string;
+  discount_amount?: string;
+  deal_expires_at?: string;
 }
 
 interface ApiResponse {
@@ -72,6 +76,7 @@ export function ProductDetails() {
   const [imageLoadErrors, setImageLoadErrors] = useState<Set<number>>(
     new Set()
   );
+  const [showFullDescription, setShowFullDescription] = useState(false);
 
   const fetchProduct = useCallback(async () => {
     if (!token || !id) return;
@@ -171,7 +176,7 @@ export function ProductDetails() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 ">
               {product.title}
             </h1>
             <p className="text-sm text-muted-foreground">
@@ -264,11 +269,29 @@ export function ProductDetails() {
           {/* Price and Status */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center justify-between max-lg:flex-col max-lg:gap-4 max-lg:items-start">
-                <span className="text-3xl font-bold">
-                  {formatCurrency(product.price)}
-                </span>
-                <div className="flex items-center gap-2">
+              <CardTitle className="flex items-center flex-wrap gap-2 justify-between max-lg:items-start">
+                <div className="space-y-2">
+                  <span className="text-3xl font-bold">
+                    {formatCurrency(product.price)}
+                  </span>
+                  {product.is_deal && product.discount_amount && (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="destructive" className="gap-1">
+                        <Tag className="h-3 w-3" />
+                        {product.discount_type === "percentage"
+                          ? `${product.discount_amount}% OFF`
+                          : `${formatCurrency(product.discount_amount)} OFF`}
+                      </Badge>
+                      {product.deal_expires_at && (
+                        <Badge variant="outline" className="gap-1 text-xs">
+                          <Calendar className="h-3 w-3" />
+                          Deal Expires {formatDate(product.deal_expires_at)}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
                   <Badge
                     variant={isInStock ? "default" : "destructive"}
                     className="gap-1"
@@ -282,11 +305,20 @@ export function ProductDetails() {
                     <Tag className="h-3 w-3" />
                     {product.condition}
                   </Badge>
+                  {product.is_deal && (
+                    <Badge
+                      variant="secondary"
+                      className="gap-1 bg-orange-100 text-orange-800 border-orange-200"
+                    >
+                      <Tag className="h-3 w-3" />
+                      Deal
+                    </Badge>
+                  )}
                 </div>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-2 max-lg:grid-cols-1 gap-4 text-sm">
                 <div>
                   <p className="text-muted-foreground">SKU</p>
                   <p className="font-mono font-medium">{product.sku}</p>
@@ -305,14 +337,71 @@ export function ProductDetails() {
               <CardTitle>Description</CardTitle>
             </CardHeader>
             <CardContent>
-              <div
-                className="leading-relaxed prose prose-sm max-w-none text-sm"
-                dangerouslySetInnerHTML={{
-                  __html: product.description || "No description available.",
-                }}
-              />
+              <div className="prose max-w-none text-sm">
+                <div
+                  className={`text-gray-600 text-sm ${
+                    !showFullDescription ? "line-clamp-6" : ""
+                  }`}
+                  dangerouslySetInnerHTML={{ __html: product.description }}
+                />
+                {product.description.length > 300 && (
+                  <button
+                    onClick={() => setShowFullDescription(!showFullDescription)}
+                    className="text-primary hover:text-primary/80 font-medium mt-2"
+                  >
+                    {showFullDescription ? "See less" : "See more"}
+                  </button>
+                )}
+              </div>
             </CardContent>
           </Card>
+
+          {/* Deal Information */}
+          {product.is_deal && (
+            <Card className="border-orange-200 bg-orange-50/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-orange-800">
+                  <Tag className="h-5 w-5" />
+                  Deal Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex items-center gap-3">
+                    <Tag className="h-4 w-4 text-orange-600" />
+                    <div>
+                      <p className="text-sm text-orange-700">Discount Type</p>
+                      <p className="font-medium text-orange-800 capitalize">
+                        {product.discount_type}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Tag className="h-4 w-4 text-orange-600" />
+                    <div>
+                      <p className="text-sm text-orange-700">Discount Amount</p>
+                      <p className="font-medium text-orange-800">
+                        {product.discount_type === "percentage"
+                          ? `${product.discount_amount}%`
+                          : formatCurrency(product.discount_amount || "0")}
+                      </p>
+                    </div>
+                  </div>
+                  {product.deal_expires_at && (
+                    <div className="flex items-center gap-3 sm:col-span-2">
+                      <Calendar className="h-4 w-4 text-orange-600" />
+                      <div>
+                        <p className="text-sm text-orange-700">Expires On</p>
+                        <p className="font-medium text-orange-800">
+                          {formatDate(product.deal_expires_at)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Product Details */}
           <Card>

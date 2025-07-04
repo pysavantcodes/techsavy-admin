@@ -13,19 +13,11 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   Search,
-  MoreHorizontal,
   ArrowLeft,
   ArrowRight,
   User,
   ArrowDownUpIcon,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "@/context/auth-context";
 import { toast } from "sonner";
@@ -47,6 +39,7 @@ interface Customer {
   id: number;
   name: string;
   email: string;
+  phone?: string;
   shipping_address: ShippingAddress;
 }
 
@@ -57,7 +50,6 @@ export function Customers() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const { token } = useAuth();
-  const navigate = useNavigate();
 
   const fetchCustomers = async (page: number) => {
     try {
@@ -126,8 +118,8 @@ export function Customers() {
                 </TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
                 <TableHead>Shipping Address</TableHead>
-                <TableHead>Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -143,8 +135,9 @@ export function Customers() {
                     <Skeleton className="h-4 w-[200px]" />
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-4 w-[300px]" />
+                    <Skeleton className="h-4 w-[200px]" />
                   </TableCell>
+
                   <TableCell>
                     <Skeleton className="h-8 w-8" />
                   </TableCell>
@@ -181,8 +174,8 @@ export function Customers() {
               </TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
+              <TableHead>Phone</TableHead>
               <TableHead>Shipping Address</TableHead>
-              <TableHead>Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -196,35 +189,11 @@ export function Customers() {
                   </TableCell>
                   <TableCell className="font-medium">{customer.name}</TableCell>
                   <TableCell>{customer.email}</TableCell>
+                  <TableCell>{customer.phone || "N/A"}</TableCell>
                   <TableCell className="max-w-[300px] truncate">
-                    {formatAddress(customer.shipping_address)}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() =>
-                            navigate(`/dashboard/customers/${customer.id}`)
-                          }
-                        >
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() =>
-                            navigate(
-                              `/dashboard/customers/${customer.id}/orders`
-                            )
-                          }
-                        >
-                          View Orders
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {customer.shipping_address
+                      ? formatAddress(customer.shipping_address)
+                      : "N/A"}
                   </TableCell>
                 </TableRow>
               ))

@@ -14,18 +14,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Search,
-  MoreHorizontal,
   ArrowLeft,
   ArrowRight,
   Package,
   ArrowDownUpIcon,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -143,12 +137,6 @@ export function Orders() {
     }
   };
 
-  const handleStatusUpdateClick = (orderId: number, newStatus: string) => {
-    setPendingOrderId(orderId);
-    setPendingStatus(newStatus);
-    setShowStatusDialog(true);
-  };
-
   const handleStatusUpdateConfirm = () => {
     if (pendingOrderId && pendingStatus) {
       handleStatusUpdate(pendingOrderId, pendingStatus);
@@ -202,7 +190,6 @@ export function Orders() {
                 <TableHead>Date</TableHead>
                 <TableHead>Total</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -222,9 +209,6 @@ export function Orders() {
                   </TableCell>
                   <TableCell>
                     <Skeleton className="h-4 w-[100px]" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-8 w-8" />
                   </TableCell>
                 </TableRow>
               ))}
@@ -262,13 +246,16 @@ export function Orders() {
                 <TableHead>Date</TableHead>
                 <TableHead>Total</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredOrders.length > 0 ? (
                 filteredOrders.map((order) => (
-                  <TableRow key={order.id}>
+                  <TableRow
+                    onClick={() => navigate(`/dashboard/orders/${order.id}`)}
+                    key={order.id}
+                    className="cursor-pointer"
+                  >
                     <TableCell>
                       {order.items[0]?.product?.images[0] ? (
                         <img
@@ -292,55 +279,6 @@ export function Orders() {
                         {order.status.charAt(0).toUpperCase() +
                           order.status.slice(1)}
                       </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() =>
-                              navigate(`/dashboard/orders/${order.id}`)
-                            }
-                          >
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              handleStatusUpdateClick(order.id, "processing")
-                            }
-                            disabled={
-                              order.status === "processing" ||
-                              order.status === "shipped" ||
-                              order.status === "delivered"
-                            }
-                          >
-                            Mark as Processing
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              handleStatusUpdateClick(order.id, "shipped")
-                            }
-                            disabled={
-                              order.status === "shipped" ||
-                              order.status === "delivered"
-                            }
-                          >
-                            Mark as Shipped
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              handleStatusUpdateClick(order.id, "delivered")
-                            }
-                            disabled={order.status === "delivered"}
-                          >
-                            Mark as Delivered
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))

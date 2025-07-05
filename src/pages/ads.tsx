@@ -98,7 +98,7 @@ export function Ads() {
           <div>
             <h1 className="text-2xl font-bold text-atlantis-800">Ads</h1>
             <p className="text-sm text-gray-500">
-              Manage your ads and their details
+              Manage the ads on your homepage
             </p>
           </div>
           <Skeleton className="h-10 w-32" />
@@ -133,7 +133,7 @@ export function Ads() {
           <div>
             <h1 className="text-2xl font-bold text-atlantis-800">Ads</h1>
             <p className="text-sm text-gray-500">
-              Manage your ads and their details
+              Manage the ads on your homepage
             </p>
           </div>
           <Button

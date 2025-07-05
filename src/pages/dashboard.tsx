@@ -75,7 +75,7 @@ export function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid max-lg:grid-cols-2 max-md:grid-cols-1 gap-4 grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
@@ -131,8 +131,8 @@ export function Dashboard() {
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Best Selling */}
+      <div className="grid gap-4 grid-cols-1">
+        {/*       
         <Card>
           <CardHeader>
             <CardTitle className="text-atlantis-800">Best Selling</CardTitle>
@@ -154,7 +154,7 @@ export function Dashboard() {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Recent Orders */}
         <Card>

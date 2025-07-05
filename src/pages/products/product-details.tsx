@@ -15,11 +15,34 @@ import {
   AlertCircle,
   ImageOff,
   CheckCircle,
+  Star,
+  MessageSquare,
+  ArrowDownUpIcon,
 } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "@/context/auth-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { toast } from "sonner";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface ProductCategory {
   id: number;
@@ -35,6 +58,27 @@ interface Addon {
   name: string;
   is_required: "1" | "0";
   options: AddonOption[];
+}
+
+interface ReviewUser {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  email_verified_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Review {
+  id: number;
+  user_id: string;
+  product_id: string;
+  rating: string;
+  comment: string;
+  created_at: string;
+  updated_at: string;
+  user: ReviewUser;
 }
 
 interface Product {
@@ -54,6 +98,7 @@ interface Product {
   discount_type?: string;
   discount_amount?: string;
   deal_expires_at?: string;
+  reviews?: Review[];
 }
 
 interface ApiResponse {
@@ -77,6 +122,11 @@ export function ProductDetails() {
     new Set()
   );
   const [showFullDescription, setShowFullDescription] = useState(false);
+
+  // Reviews state
+  const [deleteReviewId, setDeleteReviewId] = useState<number | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showDeleteProductDialog, setShowDeleteProductDialog] = useState(false);
 
   const fetchProduct = useCallback(async () => {
     if (!token || !id) return;
@@ -116,8 +166,10 @@ export function ProductDetails() {
   }, [token, id]);
 
   useEffect(() => {
-    fetchProduct();
-  }, [fetchProduct]);
+    if (token) {
+      fetchProduct();
+    }
+  }, [token]);
 
   const handleImageError = useCallback((index: number) => {
     setImageLoadErrors((prev) => new Set(prev).add(index));
@@ -130,14 +182,128 @@ export function ProductDetails() {
   }, [navigate, product]);
 
   const handleDeleteProduct = useCallback(() => {
-    if (product) {
-      console.log("Delete product:", product.id);
+    setShowDeleteProductDialog(true);
+  }, []);
+
+  const confirmDeleteProduct = useCallback(async () => {
+    if (!product || !token) return;
+
+    const toastId = toast.loading("Deleting product...");
+
+    try {
+      const response = await axios.delete(
+        `https://api.techsavyhub.ng/api/admin/products/delete/${product.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data.status === "success") {
+        toast.success("Product deleted successfully", { id: toastId });
+        navigate("/dashboard/products");
+      } else {
+        throw new Error(response.data.message || "Failed to delete product");
+      }
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      toast.error(
+        axios.isAxiosError(error)
+          ? error.response?.data?.message || "Failed to delete product"
+          : "An unexpected error occurred",
+        { id: toastId }
+      );
+    } finally {
+      setShowDeleteProductDialog(false);
     }
-  }, [product]);
+  }, [product, token, navigate]);
 
   const handleRetry = useCallback(() => {
     fetchProduct();
   }, [fetchProduct]);
+
+  const handleDeleteReview = useCallback((reviewId: number) => {
+    setDeleteReviewId(reviewId);
+    setShowDeleteDialog(true);
+  }, []);
+
+  const confirmDeleteReview = useCallback(async () => {
+    if (!deleteReviewId || !token) return;
+
+    const toastId = toast.loading("Deleting review...");
+
+    try {
+      const response = await axios.post(
+        `https://api.techsavyhub.ng/api/admin/reviews/delete/${deleteReviewId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data.status === "success") {
+        toast.success("Review deleted successfully", { id: toastId });
+        // Update the product's reviews by removing the deleted review
+        setProduct((prev) =>
+          prev
+            ? {
+                ...prev,
+                reviews:
+                  prev.reviews?.filter(
+                    (review) => review.id !== deleteReviewId
+                  ) || [],
+              }
+            : null
+        );
+      } else {
+        throw new Error(response.data.message || "Failed to delete review");
+      }
+    } catch (error) {
+      console.error("Error deleting review:", error);
+      toast.error(
+        axios.isAxiosError(error)
+          ? error.response?.data?.message || "Failed to delete review"
+          : "An unexpected error occurred",
+        { id: toastId }
+      );
+    } finally {
+      setShowDeleteDialog(false);
+      setDeleteReviewId(null);
+    }
+  }, [deleteReviewId, token]);
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const renderStars = (rating: string) => {
+    const numRating = parseInt(rating);
+    return (
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={`h-4 w-4 ${
+              star <= numRating
+                ? "text-yellow-400 fill-current"
+                : "text-gray-300"
+            }`}
+          />
+        ))}
+        <span className="ml-1 text-sm text-gray-600">({rating})</span>
+      </div>
+    );
+  };
 
   if (loadingState === "loading") {
     return <ProductDetailsSkeleton />;
@@ -464,13 +630,13 @@ export function ProductDetails() {
                     {addon.options.map((option, optionIndex) => (
                       <div
                         key={optionIndex}
-                        className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border"
+                        className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border flex-wrap gap-2"
                       >
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 text-sm">
                           <CheckCircle className="h-4 w-4 text-green-600" />
                           <span className="font-medium">{option.option}</span>
                         </div>
-                        <span className="font-semibold text-green-600">
+                        <span className="font-semibold text-green-600 text-sm">
                           +{formatCurrency(option.price)}
                         </span>
                       </div>
@@ -482,6 +648,120 @@ export function ProductDetails() {
           </CardContent>
         </Card>
       )}
+
+      {/* Reviews Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5" />
+            Customer Reviews ({product.reviews?.length || 0})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {product.reviews && product.reviews.length > 0 ? (
+            <div className="border rounded-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-12">
+                      <ArrowDownUpIcon className="size-4" />
+                    </TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Rating</TableHead>
+                    <TableHead>Review</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {product.reviews.map((review) => (
+                    <TableRow key={review.id}>
+                      <TableCell>
+                        <Avatar className="size-8">
+                          <AvatarFallback className="bg-blue-500 text-white text-xs">
+                            {getInitials(review.user.name)}
+                          </AvatarFallback>
+                        </Avatar>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {review.user.name}
+                      </TableCell>
+                      <TableCell>{renderStars(review.rating)}</TableCell>
+                      <TableCell className="max-w-md">
+                        <p className="truncate">{review.comment}</p>
+                      </TableCell>
+                      <TableCell>{formatDate(review.created_at)}</TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteReview(review.id)}
+                          className="text-red-600 hover:text-red-700 h-8 px-2"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <MessageSquare className="h-12 w-12 mx-auto text-gray-400 mb-2" />
+              <p className="text-gray-500">No reviews yet</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Delete Review Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Review</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this review? This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteReview}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Delete Review
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Product Confirmation Dialog */}
+      <AlertDialog
+        open={showDeleteProductDialog}
+        onOpenChange={setShowDeleteProductDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Product</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{product?.title}"? This action
+              cannot be undone and will also remove all associated reviews and
+              data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteProduct}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Delete Product
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import axios from "axios";
 import { useAuth } from "@/context/auth-context";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, getBadge } from "@/lib/utils";
 import { Link } from "react-router";
 
 interface DashboardData {
@@ -197,15 +197,11 @@ export function Dashboard() {
                         {order.order_number}
                       </TableCell>
                       <TableCell>{formatDate(order.date)}</TableCell>
-                      <TableCell>${order.total}</TableCell>
                       <TableCell>
-                        <Badge
-                          variant={
-                            order.status === "completed"
-                              ? "default"
-                              : "secondary"
-                          }
-                        >
+                        {formatCurrency(Number(order.total))}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getBadge(order.status)}>
                           {order.status}
                         </Badge>
                       </TableCell>

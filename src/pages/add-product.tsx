@@ -287,9 +287,11 @@ export function AddProduct() {
       formDataToSend.append("condition", selectedCondition);
       formDataToSend.append("description", formData.description);
       formDataToSend.append("is_deal", formData.is_deal);
-      formDataToSend.append("discount_type", formData.discount_type);
-      formDataToSend.append("discount_amount", formData.discount_amount);
-      formDataToSend.append("deal_expires_at", formData.deal_expires_at);
+      if (formData.is_deal === "1") {
+        formDataToSend.append("discount_type", formData.discount_type);
+        formDataToSend.append("discount_amount", formData.discount_amount);
+        formDataToSend.append("deal_expires_at", formData.deal_expires_at);
+      }
 
       selectedImages.forEach((image, index) => {
         formDataToSend.append(`images[${index}]`, image);
@@ -332,9 +334,12 @@ export function AddProduct() {
       }
     } catch (error) {
       console.error("Error creating product:", error);
-      toast.error("Failed to create product. Please try again.", {
-        id: toastId,
-      });
+      toast.error(
+        axios.isAxiosError(error)
+          ? error.response?.data?.message || "Failed to create product"
+          : "An unexpected error occurred",
+        { id: toastId }
+      );
     } finally {
       setLoading(false);
     }

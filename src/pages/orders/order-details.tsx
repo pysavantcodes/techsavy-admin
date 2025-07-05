@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -34,7 +34,7 @@ import axios from "axios";
 import { useAuth } from "@/context/auth-context";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, getBadge } from "@/lib/utils";
 
 interface OrderItemAddon {
   price: string;
@@ -289,7 +289,9 @@ export function OrderDetails() {
                   #{order.order_number}
                 </h1>
                 <div
-                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border ${statusConfig.color}`}
+                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border ${getBadge(
+                    order.status
+                  )}`}
                 >
                   <StatusIcon className="h-4 w-4 max-md:h-3 max-md:w-3" />
                   {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
@@ -342,9 +344,14 @@ export function OrderDetails() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-lg text-atlantis-800 dark:text-gray-100 mb-2">
-                          {item.product.title}
-                        </h3>
+                        <Link
+                          to={`/dashboard/products/${item.product.id}`}
+                          className="mb-2"
+                        >
+                          <h3 className="font-semibold text-lg text-atlantis-800 dark:text-gray-100 ">
+                            {item.product.title}
+                          </h3>
+                        </Link>
                         <div className="text-sm">
                           <div>
                             <span className="text-gray-600 dark:text-gray-400">

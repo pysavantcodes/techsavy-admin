@@ -27,7 +27,7 @@ import { Categories } from "./pages/categories";
 function App() {
   return (
     <AuthProvider>
-      <Toaster />
+      <Toaster richColors />
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />

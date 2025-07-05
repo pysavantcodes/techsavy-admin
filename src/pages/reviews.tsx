@@ -25,6 +25,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Star } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "@/context/auth-context";
@@ -62,6 +72,8 @@ export function Reviews() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [deleteReviewId, setDeleteReviewId] = useState<number | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { token } = useAuth();
 
   const fetchReviews = async (page: number) => {
@@ -94,6 +106,50 @@ export function Reviews() {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  const handleDeleteReview = (reviewId: number) => {
+    setDeleteReviewId(reviewId);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteReview = async () => {
+    if (!deleteReviewId || !token) return;
+
+    const toastId = toast.loading("Deleting review...");
+
+    try {
+      const response = await axios.post(
+        `https://api.techsavyhub.ng/api/admin/reviews/delete/${deleteReviewId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data.status === "success") {
+        toast.success("Review deleted successfully", { id: toastId });
+        setReviews((prev) =>
+          prev.filter((review) => review.id !== deleteReviewId)
+        );
+      } else {
+        throw new Error(response.data.message || "Failed to delete review");
+      }
+    } catch (error) {
+      console.error("Error deleting review:", error);
+      toast.error(
+        axios.isAxiosError(error)
+          ? error.response?.data?.message || "Failed to delete review"
+          : "An unexpected error occurred",
+        { id: toastId }
+      );
+    } finally {
+      setShowDeleteDialog(false);
+      setDeleteReviewId(null);
+    }
   };
 
   const getInitials = (name: string) => {
@@ -253,7 +309,10 @@ export function Reviews() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem className="text-red-600">
+                        <DropdownMenuItem
+                          className="text-red-600"
+                          onClick={() => handleDeleteReview(review.id)}
+                        >
                           Delete Review
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -303,6 +362,28 @@ export function Reviews() {
           </Button>
         </div>
       )}
+
+      {/* Delete Review Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Review</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this review? This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteReview}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Delete Review
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

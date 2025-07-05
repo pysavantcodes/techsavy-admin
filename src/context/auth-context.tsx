@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.data.status === "success") {
         const { token, admin } = response.data;
-        Cookies.set("techSavyAdminAuthToken", token);
+        Cookies.set("techSavyAdminAuthToken", token, { expires: 30 });
         setToken(token);
         setAdmin(admin);
       }

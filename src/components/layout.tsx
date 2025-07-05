@@ -128,7 +128,9 @@ export function Layout() {
               >
                 <LogOut className="size-4" />
               </Button>
-              <ExternalLink className="size-4" />
+              <a href="https://techsavyhub.vercel.app" target="_blank">
+                <ExternalLink className="size-4" />
+              </a>
             </div>
           </header>
           <div className="flex flex-1 flex-col gap-4 p-6">

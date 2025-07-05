@@ -359,9 +359,11 @@ export function EditProduct() {
       formDataToSend.append("condition", selectedCondition);
       formDataToSend.append("description", formData.description);
       formDataToSend.append("is_deal", formData.is_deal ? "1" : "0");
-      formDataToSend.append("discount_type", formData.discount_type);
-      formDataToSend.append("discount_amount", formData.discount_amount);
-      formDataToSend.append("deal_expires_at", formData.deal_expires_at);
+      if (formData.is_deal) {
+        formDataToSend.append("discount_type", formData.discount_type);
+        formDataToSend.append("discount_amount", formData.discount_amount);
+        formDataToSend.append("deal_expires_at", formData.deal_expires_at);
+      }
 
       // Add new images
       selectedImages.forEach((image, index) => {
@@ -410,9 +412,12 @@ export function EditProduct() {
       }
     } catch (error) {
       console.error("Error updating product:", error);
-      toast.error("Failed to update product. Please try again.", {
-        id: toastId,
-      });
+      toast.error(
+        axios.isAxiosError(error)
+          ? error.response?.data?.message || "Failed to update product"
+          : "An unexpected error occurred",
+        { id: toastId }
+      );
     } finally {
       setLoading(false);
     }

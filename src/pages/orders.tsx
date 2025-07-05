@@ -35,7 +35,7 @@ import axios from "axios";
 import { useAuth } from "@/context/auth-context";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, getBadge } from "@/lib/utils";
 
 interface OrderItem {
   id: number;
@@ -152,21 +152,6 @@ export function Orders() {
     setPendingStatus("");
   };
 
-  const getStatusVariant = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "delivered":
-        return "default";
-      case "processing":
-        return "secondary";
-      case "shipped":
-        return "outline";
-      case "pending":
-        return "secondary";
-      default:
-        return "outline";
-    }
-  };
-
   const filteredOrders = orders.filter((order) =>
     order.order_number.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -275,7 +260,7 @@ export function Orders() {
                     <TableCell>{formatDate(order.created_at)}</TableCell>
                     <TableCell>{formatCurrency(order.total_amount)}</TableCell>
                     <TableCell>
-                      <Badge variant={getStatusVariant(order.status)}>
+                      <Badge className={getBadge(order.status)}>
                         {order.status.charAt(0).toUpperCase() +
                           order.status.slice(1)}
                       </Badge>

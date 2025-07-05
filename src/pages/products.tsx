@@ -81,7 +81,12 @@ export function Products() {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center max-lg:flex-col max-lg:gap-4 max-lg:items-start">
-          <h1 className="text-2xl font-bold text-atlantis-800">Products</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-atlantis-800">Products</h1>
+            <p className="text-sm text-gray-500">
+              Manage your products and their details
+            </p>
+          </div>
           <div className="flex gap-4 flex-wrap">
             <Skeleton className="h-10 w-32" />
             <Skeleton className="h-10 w-32" />
@@ -135,7 +140,12 @@ export function Products() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center max-lg:flex-col max-lg:gap-4 max-lg:items-start">
-        <h1 className="text-2xl font-bold text-atlantis-800">Products</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-atlantis-800">Products</h1>
+          <p className="text-sm text-gray-500">
+            Manage your products and their details
+          </p>
+        </div>
         <div className="flex gap-2 flex-wrap">
           <Button asChild className="bg-primary">
             <Link to="/dashboard/products/add">Add product</Link>

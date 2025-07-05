@@ -383,8 +383,13 @@ export function Categories() {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center max-lg:flex-col max-lg:gap-4 max-lg:items-start">
-          <h1 className="text-2xl font-bold text-atlantis-800">Categories</h1>
-          <div className="flex gap-2">
+          <div>
+            <h1 className="text-2xl font-bold text-atlantis-800">Categories</h1>
+            <p className="text-sm text-gray-500">
+              Manage your product categories and their details
+            </p>
+          </div>
+          <div className="flex gap-2 flex-wrap">
             <Skeleton className="h-10 w-64" />
             <Skeleton className="h-10 w-32" />
           </div>
@@ -431,8 +436,13 @@ export function Categories() {
     <>
       <div className="space-y-6">
         <div className="flex justify-between items-center max-lg:flex-col max-lg:gap-4 max-lg:items-start">
-          <h1 className="text-2xl font-bold text-atlantis-800">Categories</h1>
-          <div className="flex gap-2">
+          <div>
+            <h1 className="text-2xl font-bold text-atlantis-800">Categories</h1>
+            <p className="text-sm text-gray-500">
+              Manage your product categories and their details
+            </p>
+          </div>
+          <div className="flex gap-2 flex-wrap">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 size-4" />
               <Input

@@ -94,8 +94,13 @@ export function Ads() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-atlantis-800">Ads</h1>
+        <div className="flex justify-between flex-wrap gap-4 items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-atlantis-800">Ads</h1>
+            <p className="text-sm text-gray-500">
+              Manage your ads and their details
+            </p>
+          </div>
           <Skeleton className="h-10 w-32" />
         </div>
 
@@ -124,8 +129,13 @@ export function Ads() {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-atlantis-800">Ads</h1>
+        <div className="flex justify-between flex-wrap gap-4 items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-atlantis-800">Ads</h1>
+            <p className="text-sm text-gray-500">
+              Manage your ads and their details
+            </p>
+          </div>
           <Button
             onClick={() => setIsAddDialogOpen(true)}
             className="bg-primary gap-2"

@@ -160,7 +160,12 @@ export function Orders() {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center max-lg:flex-col max-lg:gap-4 max-lg:items-start">
-          <h1 className="text-2xl font-bold text-atlantis-800">Orders</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-atlantis-800">Orders</h1>
+            <p className="text-sm text-gray-500">
+              Manage your orders and their details
+            </p>
+          </div>
           <Skeleton className="h-10 w-64" />
         </div>
 
@@ -208,7 +213,12 @@ export function Orders() {
     <>
       <div className="space-y-6">
         <div className="flex justify-between items-center max-lg:flex-col max-lg:gap-4 max-lg:items-start">
-          <h1 className="text-2xl font-bold text-atlantis-800">Orders</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-atlantis-800">Orders</h1>
+            <p className="text-sm text-gray-500">
+              Manage your orders and their details
+            </p>
+          </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 size-4" />
             <Input

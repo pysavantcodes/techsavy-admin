@@ -72,7 +72,11 @@ export function Layout() {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
   if (!isAuthenticated()) {
-    return <Navigate to="/login" />;
+    const redirectPath = encodeURIComponent(
+      location.pathname + location.search
+    );
+
+    return <Navigate to={`/login?redirect=${redirectPath}`} replace />;
   }
 
   const handleLogoutClick = () => {
@@ -128,7 +132,7 @@ export function Layout() {
               >
                 <LogOut className="size-4" />
               </Button>
-              <a href="https://techsavyhub.vercel.app" target="_blank">
+              <a href="https://techsavyhub.ng" target="_blank">
                 <ExternalLink className="size-4" />
               </a>
             </div>

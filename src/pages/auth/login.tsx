@@ -13,11 +13,12 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { Eye, EyeOff } from "lucide-react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/auth-context";
 import { toast } from "sonner";
 
 export function Login() {
+  const [searchParams] = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,7 +35,13 @@ export function Login() {
     try {
       await login(email, password);
       toast.success("Login successful!", { id: toastId });
-      navigate("/dashboard");
+
+      const redirectParam = searchParams.get("redirect");
+      const redirect = redirectParam
+        ? decodeURIComponent(redirectParam)
+        : "/dashboard";
+
+      navigate(redirect, { replace: true });
     } catch (error) {
       toast.error("Login failed. Please check your credentials.", {
         id: toastId,
@@ -46,7 +53,12 @@ export function Login() {
   };
 
   if (token) {
-    return <Navigate to={"/dashboard"} />;
+    const redirectParam = searchParams.get("redirect");
+    const redirect = redirectParam
+      ? decodeURIComponent(redirectParam)
+      : "/dashboard";
+
+    return <Navigate to={redirect} replace />;
   }
 
   return (
